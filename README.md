@@ -38,9 +38,22 @@ docker-compose up -d
 
 ### 3️⃣ Start Backend Services & Frontend
 ```sh
-cd services/user-service && npm start
-cd services/booking-service && npm start
-cd frontend && npm run dev
+cd services/user-service && npm i
+```
+```sh
+npm install --save-dev typescript
+```
+```sh
+npx prisma init && npx prisma migrate dev --name init
+```
+```sh
+npm run build
+```
+```sh
+npm run dev
+```
+```sh
+cd ../frontend && npm run dev
 ```
 
 ### 4️⃣ Visit the Frontend
@@ -55,13 +68,19 @@ cd frontend && npm run dev
 
 ## 📌 Steps
 
-### ✅ **Step 1 Recap**
+### ✅ **Step 1: Project Setup & Documentation**
 ✔️ **Git repository initialized**  
 ✔️ **Project folder structure set up**  
 ✔️ **ESLint & Prettier configured**  
 ✔️ **Docker Compose for PostgreSQL, Redis, RabbitMQ**  
 ✔️ **Initial README.md with documentation**  
 
----
+### ✅ **Step 2: User Authentication & Authorization (User Service)**
+✔️ **Implemented User Service with authentication (signup, login, and refresh tokens)**  
+✔️ **Integrated JWT-based authentication and bcrypt for password hashing**  
+✔️ **Configured Prisma ORM to manage user accounts in PostgreSQL**  
+✔️ **Exposed authentication routes (/auth/signup, /auth/login, /auth/refresh)**  
+✔️ **Added JWT middleware for secure route protection**  
 
-### 🔜 **Next Step: User Authentication Service**
+
+---
