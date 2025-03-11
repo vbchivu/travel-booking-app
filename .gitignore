@@ -1,0 +1,106 @@
+# Node.js
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Secure
+secure
+
+# Exports
+exports
+
+# Logs
+logs
+*.log
+*.log.*
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-compose.override.yml
+docker-compose.*.yml
+.docker/
+docker/*
+
+# Database
+db_data/
+# *.sql
+*.sqlite
+
+# Runtime
+pids/
+*.pid
+*.seed
+*.pid.lock
+lib-cov/
+
+# Coverage
+coverage/
+*.lcov
+*.lcov.info
+
+# Dependency directories
+bower_components/
+jspm_packages/
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build files
+dist/
+build/
+out/
+
+# Miscellaneous
+*.iml
+*.sublime-workspace
+*.sublime-project
+*.log
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.swp
+*.swo
+*~
+
+# Swagger Auto-generated files
+swagger.json
+swagger.yaml
+
+# Specific application files
+insertExampleData.js.bak
+# db_init/init.sql
+
+# OS-generated files
+*.DS_Store
+*.AppleDouble
+*.LSOverride
+
+# Coverage directories used by tools like istanbul
+coverage/
+.nyc_output/
+
+# Testing
+jest/
+*.spec.js
+*.test.js
+
+# Optional npm cache directory
+.npm
+
+# Yarn Integrity File
+.yarn-integrity
+
+secure-data-import-frontend/
