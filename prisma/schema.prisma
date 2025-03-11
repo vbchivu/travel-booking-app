@@ -21,3 +21,11 @@ model User {
   createdAt     DateTime @default(now())
   refreshToken  String?  // Store refresh tokens securely
 }
+
+model Booking {
+  id         String   @id @default(uuid())
+  userId     String
+  flightNumber String
+  status     String   @default("pending")  // "pending", "confirmed", "cancelled"
+  createdAt  DateTime @default(now())
+}

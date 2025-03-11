@@ -2,31 +2,65 @@ version: '3.8'
 
 services:
   user-service:
-      build: ./services/user-service
-      ports:
-        - "5001:5000"
-      environment:
-        - NODE_ENV=production
-        - DATABASE_URL=postgresql://user:password@db:5432/userdb
-      depends_on:
-        - postgres
-      networks:
-        - backend
+    build:
+      context: .  # 👈 Set the build context to the root directory
+      dockerfile: ./services/user-service/Dockerfile
+    ports:
+      - '5001:5000'
+    env_file: 
+      - ./services/user-service/.env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL_USER}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+    volumes:
+      - ./prisma:/app/prisma
+
+  booking-service:
+    build:
+      context: .  # 👈 Set the build context to the root directory
+      dockerfile: ./services/booking-service/Dockerfile
+    ports:
+      - '4001:4001'
+    env_file: 
+      - ./services/booking-service/.env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL_BOOKING}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+    volumes:
+      - ./prisma:/app/prisma
 
   postgres:
     image: postgres:15
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: travel_app
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - backend
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -36,8 +70,15 @@ services:
       - '5672:5672' # Message broker port
       - '15672:15672' # Management UI
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: secret
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    networks:
+      - backend
+    healthcheck:
+      test: ['CMD', 'rabbitmqctl', 'status']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:latest
@@ -45,6 +86,8 @@ services:
     restart: always
     ports:
       - '6379:6379'
+    networks:
+      - backend
 
 volumes:
   postgres_data:
