@@ -82,5 +82,10 @@ cd ../frontend && npm run dev
 ✔️ **Exposed authentication routes (/auth/signup, /auth/login, /auth/refresh)**  
 ✔️ **Added JWT middleware for secure route protection**  
 
-
+### ✅ **Step 3: Booking Service (GraphQL & REST API)**
+✔️ **Created Booking Service with PostgreSQL integration using Prisma ORM**  
+✔️ **Implemented REST API and GraphQL resolvers for booking management**  
+✔️ **Integrated RabbitMQ event publishing for booking.created**  
+✔️ **Implemented structured logging with Winston**  
+✔️ **Exposed routes for creating and retrieving bookings**  
 ---
