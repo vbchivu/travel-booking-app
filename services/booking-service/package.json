@@ -4,12 +4,11 @@
   "description": "Booking service using Express, GraphQL, Prisma, RabbitMQ, and TypeScript.",
   "main": "dist/server.js",
   "scripts": {
-    "prestart": "npx prisma generate",
     "start": "node dist/server.js",
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "jest --config jest.config.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "express",
@@ -21,7 +20,6 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "@travel-app/prisma": "file:../../prisma",
     "@travel-app/shared": "file:../shared",
     "amqplib": "^0.10.5",
     "apollo-server": "^3.13.0",

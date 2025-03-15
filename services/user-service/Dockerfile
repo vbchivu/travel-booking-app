@@ -1,41 +1,52 @@
-FROM node:18-alpine AS builder
+# -----------------------------
+# 1) Builder Stage
+# -----------------------------
+  FROM node:18-alpine AS builder
 
-ARG NODE_ENV=production
-WORKDIR /app
-
-# 1. Copy entire monorepo
-COPY package.json package-lock.json ./
-COPY services/ services/
-COPY prisma/ prisma/
-
-# 2. Install all deps (monorepo root)
-RUN if [ "$NODE_ENV" = "development" ]; then \
+  ARG NODE_ENV=production
+  WORKDIR /app
+  
+  # Copy entire monorepo
+  COPY package.json package-lock.json ./
+  COPY services/ services/
+  COPY prisma/ prisma/
+  
+  # Install all dependencies at the root, including @travel-app/shared
+  RUN if [ "$NODE_ENV" = "development" ]; then \
         npm install; \
-    else \
+      else \
         npm ci --omit=dev; \
-    fi
-
-# 3. Compile the prisma package
-WORKDIR /app/prisma
-RUN npm run build || echo "No build step for prisma"
-
-# 4. Compile shared (if needed)
-WORKDIR /app/services/shared
-RUN npm run build || echo "No build step for shared"
-
-# 5. Now compile user-service
-WORKDIR /app/services/user-service
-RUN npm run build
-
-FROM node:18-alpine
-WORKDIR /app
-
-# Copy compiled user-service
-COPY --from=builder /app/services/user-service/dist ./dist
-# Copy entire root node_modules to final container
-COPY --from=builder /app/node_modules ./node_modules
-# Optional: copy user-service's package.json
-COPY --from=builder /app/services/user-service/package.json ./package.json
-
-EXPOSE 5000
-CMD ["node", "dist/server.js"]
+      fi
+  
+  # Build shared first => produces /app/services/shared/dist
+  WORKDIR /app/services/shared
+  RUN npm run build
+  
+  # Build user-service => /app/services/user-service/dist
+  WORKDIR /app/services/user-service
+  RUN npm run build
+  
+  # -----------------------------
+  # 2) Final Runtime Stage
+  # -----------------------------
+  FROM node:18-alpine
+  WORKDIR /app
+  
+  # Copy user-service compiled code
+  COPY --from=builder /app/services/user-service/dist /app/services/user-service/dist
+  
+  # Copy shared compiled code as well
+  COPY --from=builder /app/services/shared/dist /app/services/shared/dist
+  
+  # Copy only the necessary node_modules
+  COPY --from=builder /app/node_modules /app/node_modules
+  # COPY --from=builder /app/services/shared/node_modules /app/services/shared/node_modules
+  
+  # Copy user-service's package.json
+  COPY --from=builder /app/services/user-service/package.json ./package.json
+  
+  EXPOSE 5000
+  
+  # Our main server file is inside user-service/dist
+  CMD ["node", "services/user-service/dist/server.js"]
+  
