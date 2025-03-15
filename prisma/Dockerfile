@@ -1,6 +1,7 @@
 FROM node:18-alpine
 
 ARG NODE_ENV=production
+
 # Set working directory specifically to /app/prisma
 WORKDIR /app/prisma
 
@@ -10,12 +11,6 @@ ENV PATH="/app/prisma/node_modules/.bin:${PATH}"
 # Copy only the prisma folder's package files
 COPY prisma/package.json prisma/package-lock.json ./
 
-# Copy schema.prisma (and any other TS/JS files needed for migrations)
-COPY prisma/schema.prisma ./
-# If you have a client.ts or other code in prisma/, copy them here too:
-COPY prisma/client.ts ./
-# COPY prisma/tsconfig.json ./
-
 # Install only what's in prisma/package.json
 RUN if [ "$NODE_ENV" = "development" ]; then \
         npm install; \
@@ -23,5 +18,12 @@ RUN if [ "$NODE_ENV" = "development" ]; then \
         npm ci --omit=dev; \
     fi
 
-# Final command: run migrations
-CMD ["npx", "prisma", "migrate", "deploy"]
+# Copy schema.prisma (and any other TS/JS files needed for migrations)
+COPY prisma/schema.prisma ./
+COPY prisma/tsconfig.json ./
+
+# Generate Prisma Client (Before Migrations)
+RUN npx prisma generate
+
+# Apply Migrations
+CMD ["sh", "-c", "npx prisma migrate deploy || (npx prisma migrate dev --name init && npx prisma generate) && tail -f /dev/null"]
