@@ -1,15 +1,15 @@
 {
   "name": "travel-app",
   "version": "1.0.0",
-  "description": "# 🌍 Travel Booking & Support System",
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
   "private": true,
-  "workspaces": [
-    "services/*",
-    "prisma/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "services/shared",
+      "services/user-service",
+      "services/booking-service",
+      "prisma"
+    ]
+  },
   "scripts": {
     "install:all": "npm install",
     "dev:user": "npm run dev --workspace=services/user-service",
