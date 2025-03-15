@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+// src/models/bookingModel.ts
+import prisma from "@travel-app/shared/src/prisma";
 
 export const createBooking = async (userId: string, flightNumber: string) => {
     return await prisma.booking.create({

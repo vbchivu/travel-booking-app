@@ -1,4 +1,5 @@
-import prisma from "./db";
+// src/models/userModel.ts
+import prisma from "@travel-app/shared/src/prisma";
 
 export async function createUser(email: string, hashedPassword: string) {
     return prisma.user.create({

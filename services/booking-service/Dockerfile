@@ -1,49 +1,32 @@
-# Use an official Node.js runtime as the base image
 FROM node:18-alpine AS builder
 
-# Set the working directory inside the container
+ARG NODE_ENV=production
 WORKDIR /app
 
-# Copy package.json and package-lock.json first (leverage Docker caching)
-COPY ./services/booking-service/package.json ./services/booking-service/package-lock.json ./
+COPY package.json package-lock.json ./
+COPY services/ services/
+COPY prisma/ prisma/
 
-# Install dependencies
-RUN npm install
+RUN if [ "$NODE_ENV" = "development" ]; then \
+        npm install; \
+    else \
+        npm ci --omit=dev; \
+    fi
 
-# Copy the Prisma schema from the root directory
-COPY ./prisma ./prisma
+# Build shared first (in case booking-service depends on it)
+WORKDIR /app/services/shared
+RUN npm run build || echo "No shared build step"
 
-# Copy the rest of the application files
-COPY ./services/booking-service ./
-
-# Set Prisma schema path explicitly
-ENV PRISMA_SCHEMA_PATH=/app/prisma/schema.prisma
-
-# Generate Prisma Client for this service
-RUN npx prisma generate --schema=$PRISMA_SCHEMA_PATH
-
-# Build TypeScript code
+# Build booking-service
+WORKDIR /app/services/booking-service
 RUN npm run build
 
-# Use a lightweight Node.js image for the final container
 FROM node:18-alpine
-
-# Set the working directory
 WORKDIR /app
 
-# Copy built files from the builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/services/booking-service/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/services/booking-service/package.json ./package.json
 
-# Ensure Prisma schema is available
-COPY --from=builder /app/prisma ./prisma 
-
-# Force Prisma Client generation at runtime before the app starts
-RUN npx prisma generate --schema=/app/prisma/schema.prisma
-
-# Expose the application port
 EXPOSE 4001
-
-# Start the application
 CMD ["node", "dist/server.js"]

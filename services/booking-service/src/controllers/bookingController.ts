@@ -1,3 +1,4 @@
+// src/controllers/bookingController.ts
 import { Request, Response } from "express";
 import { bookFlight, fetchBookingById, fetchBookingsByUser, changeBookingStatus } from "../services/bookingService";
 

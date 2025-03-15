@@ -1,0 +1,20 @@
+{
+  "name": "@travel-app/prisma",
+  "version": "1.0.0",
+  "main": "dist/client.ts",
+  "scripts": {
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate"
+  },
+  "devDependencies": {
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "prisma": "^6.5.0"
+  }
+}

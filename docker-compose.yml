@@ -1,55 +1,60 @@
-version: '3.8'
-
 services:
+  # 🚀 DATABASE MIGRATIONS SERVICE
+  database-migrations:
+    build:
+      context: . 
+      dockerfile: ./prisma/Dockerfile
+      args:
+        - NODE_ENV=${NODE_ENV}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+
+  # 🚀 USER SERVICE
   user-service:
     build:
-      context: .  # 👈 Set the build context to the root directory
+      context: . 
       dockerfile: ./services/user-service/Dockerfile
+      args:
+        - NODE_ENV=${NODE_ENV}
     ports:
       - '5001:5000'
-    env_file: 
-      - ./services/user-service/.env
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL_USER}
+    env_file:
+      - .env
     depends_on:
-      postgres:
-        condition: service_healthy
+      database-migrations:
+        condition: service_completed_successfully
     networks:
       - backend
-    volumes:
-      - ./prisma:/app/prisma
 
+  # 🚀 BOOKING SERVICE
   booking-service:
     build:
-      context: .  # 👈 Set the build context to the root directory
+      context: . 
       dockerfile: ./services/booking-service/Dockerfile
+      args:
+        - NODE_ENV=${NODE_ENV}
     ports:
       - '4001:4001'
-    env_file: 
-      - ./services/booking-service/.env
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL_BOOKING}
-      - RABBITMQ_URL=${RABBITMQ_URL}
+    env_file:
+      - .env
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      database-migrations:
+        condition: service_completed_successfully
     networks:
       - backend
-    volumes:
-      - ./prisma:/app/prisma
 
+  # 🚀 POSTGRES DATABASE
   postgres:
     image: postgres:15
     container_name: postgres_db
     restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+    env_file:
+      - .env
     ports:
       - '5432:5432'
     volumes:
@@ -62,16 +67,16 @@ services:
       timeout: 5s
       retries: 5
 
+  # 🚀 RABBITMQ MESSAGE BROKER
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     restart: always
+    env_file:
+      - .env
     ports:
-      - '5672:5672' # Message broker port
-      - '15672:15672' # Management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+      - '5672:5672'
+      - '15672:15672'
     networks:
       - backend
     healthcheck:
@@ -80,10 +85,13 @@ services:
       timeout: 5s
       retries: 5
 
+  # 🚀 REDIS CACHE
   redis:
     image: redis:latest
     container_name: redis_cache
     restart: always
+    env_file:
+      - .env
     ports:
       - '6379:6379'
     networks:

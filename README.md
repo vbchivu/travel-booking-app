@@ -88,4 +88,3 @@ cd ../frontend && npm run dev
 ✔️ **Integrated RabbitMQ event publishing for booking.created**  
 ✔️ **Implemented structured logging with Winston**  
 ✔️ **Exposed routes for creating and retrieving bookings**  
----

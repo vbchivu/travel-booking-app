@@ -1,3 +1,4 @@
+// src/routes/bookingRoutes.ts
 import express from "express";
 import {
     createBookingHandler,
@@ -5,12 +6,13 @@ import {
     getBookingsByUserHandler,
     updateBookingStatusHandler
 } from "../controllers/bookingController";
+import { authenticateJWT } from "@travel-app/shared";
 
 const router = express.Router();
 
-router.post("/", createBookingHandler);
-router.get("/:id", getBookingByIdHandler);
-router.get("/user/:userId", getBookingsByUserHandler);
-router.patch("/:id/status", updateBookingStatusHandler);
+router.post("/", authenticateJWT, createBookingHandler);
+router.get("/:id", authenticateJWT, getBookingByIdHandler);
+router.get("/user/:userId", authenticateJWT, getBookingsByUserHandler);
+router.patch("/:id/status", authenticateJWT, updateBookingStatusHandler);
 
 export default router;
