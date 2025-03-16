@@ -9,7 +9,7 @@ WORKDIR /app/prisma
 ENV PATH="/app/prisma/node_modules/.bin:${PATH}"
 
 # Copy only the prisma folder's package files
-COPY prisma/package.json prisma/package-lock.json ./
+COPY prisma/package.json ./
 
 # Install only what's in prisma/package.json
 RUN if [ "$NODE_ENV" = "development" ]; then \
@@ -25,5 +25,20 @@ COPY prisma/tsconfig.json ./
 # Generate Prisma Client (Before Migrations)
 RUN npx prisma generate
 
-# Apply Migrations
-CMD ["sh", "-c", "npx prisma migrate deploy || (npx prisma migrate dev --name init && npx prisma generate) && tail -f /dev/null"]
+# Apply migrations with drift detection
+CMD ["sh", "-c", " \
+    echo 'Checking for database drift...'; \
+    npx prisma migrate status || echo 'No drift detected'; \
+    \
+    if [ \"$NODE_ENV\" = \"production\" ]; then \
+        echo 'Applying pending migrations...'; \
+        npx prisma migrate deploy; \
+    else \
+        echo 'Applying development migrations...'; \
+        npx prisma migrate dev --name init; \
+        npx prisma generate; \
+    fi; \
+    \
+    echo 'Starting database migration container...'; \
+    tail -f /dev/null \
+"]

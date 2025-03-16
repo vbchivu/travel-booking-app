@@ -104,3 +104,5 @@ jest/
 .yarn-integrity
 
 secure-data-import-frontend/
+
+coverage

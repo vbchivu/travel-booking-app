@@ -13,8 +13,8 @@ services:
         condition: service_healthy
     networks:
       - backend
-    restart: unless-stopped # Keeps the container running
-    tty: true # Allows interactive shell access
+    # restart: unless-stopped # Keeps the container running
+    # tty: true # Allows interactive shell access
 
   # 🚀 USER SERVICE
   user-service:
@@ -28,8 +28,8 @@ services:
     env_file:
       - .env
     depends_on:
-      database-migrations:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     networks:
       - backend
 
@@ -45,8 +45,8 @@ services:
     env_file:
       - .env
     depends_on:
-      database-migrations:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     networks:
       - backend
 

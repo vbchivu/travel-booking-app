@@ -1,3 +1,4 @@
+// services/shared/src/auth/authMiddleware.ts
 import { Request, Response, NextFunction } from "express";
 import { config } from "../config/env";
 import { verifyToken } from "./tokenService";

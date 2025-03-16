@@ -14,5 +14,12 @@
     "install:all": "npm install",
     "dev:user": "npm run dev --workspace=services/user-service",
     "dev:booking": "npm run dev --workspace=services/booking-service"
+  },
+  "devDependencies": {
+    "@types/supertest": "^6.0.2",
+    "dotenv": "^16.4.7"
+  },
+  "dependencies": {
+    "path": "^0.12.7"
   }
 }

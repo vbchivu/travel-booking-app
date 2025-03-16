@@ -23,17 +23,23 @@
         "noImplicitReturns": true,
         "noUncheckedIndexedAccess": true,
         "typeRoots": [
-            "./node_modules/@types"
+            "../../node_modules/@types"
         ],
         "baseUrl": "./",
         "paths": {
             "@travel-app/shared": [
                 "../shared/dist"
             ]
-        }
+        },
+        "types": [
+            "node",
+            "jest"
+        ],
+        "allowJs": true
     },
     "include": [
-        "src"
+        "src",
+        "src/__tests__",
     ],
     "exclude": [
         "node_modules",

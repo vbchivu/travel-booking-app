@@ -34,7 +34,10 @@
   
   # Copy user-service compiled code
   COPY --from=builder /app/services/user-service/dist /app/services/user-service/dist
-  
+
+  # Copy shared compiled code as well
+  COPY --from=builder /app/services/shared/dist /app/services/shared/dist
+
   # Copy node_modules from builder into a temporary folder
   COPY --from=builder /app/node_modules /app/node_modules_temp
   
@@ -46,7 +49,7 @@
   
   # Move the temporary node_modules to the final location
   RUN mv /app/node_modules_temp /app/node_modules
-  
+
   EXPOSE 5000
   
   ENV JWT_SECRET=${JWT_SECRET}

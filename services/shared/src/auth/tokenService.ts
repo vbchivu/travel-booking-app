@@ -1,3 +1,4 @@
+// services/shared/src/auth/tokenService.ts
 import jwt, { SignOptions } from "jsonwebtoken";
 import { config } from "../config/env";
 
@@ -8,7 +9,6 @@ interface UserPayload {
 
 /**
  * Generates an access token and refresh token for a user.
- * @param user - The user payload (id & role).
  */
 export const generateTokens = (user: UserPayload) => {
     const jwtOptions: SignOptions = { expiresIn: parseInt(config.jwtExpiration, 10) };
@@ -22,24 +22,17 @@ export const generateTokens = (user: UserPayload) => {
 
 /**
  * Verifies a token and returns its payload if valid.
- * @param token - The JWT token to verify.
- * @param secret - The secret key to use for verification.
  */
 export const verifyToken = (token: string, secret: string) => {
+    console.log("Verifying token:", token);
+    console.log("Using secret:", secret);
     try {
         return jwt.verify(token, secret) as UserPayload;
     } catch (error) {
+        console.error("JWT verification failed:", error);
+        if (error === "TokenExpiredError") {
+            console.error("Token expired at:", error);
+        }
         return null;
     }
-};
-
-/**
- * Refreshes an access token using a valid refresh token.
- * @param refreshToken - The user's refresh token.
- */
-export const refreshAccessToken = (refreshToken: string) => {
-    const decoded = verifyToken(refreshToken, config.refreshTokenSecret);
-    if (!decoded) return null;
-
-    return generateTokens({ id: decoded.id, role: decoded.role }).accessToken;
 };

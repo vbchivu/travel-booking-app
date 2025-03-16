@@ -10,7 +10,11 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     try {
         const user = await registerUser(email, password);
-        res.status(201).json({ message: "User created", userId: user?.id });
+        if (!user) {
+            res.status(409).json({ message: "User already exists" });
+            return;
+        }
+        res.status(201).json({ message: "User created", userId: user.id });
     } catch (error) {
         res.status(500).json({ message: "Error creating user" });
     }
@@ -25,8 +29,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
+    // Send the refresh token in an HTTP-only cookie
     res.cookie("refreshToken", authData.refreshToken, { httpOnly: true, secure: true, sameSite: "strict" });
-    res.json({ token: authData.accessToken, userId: authData.userId });
+    res.json({ accessToken: authData.accessToken, userId: authData.userId });
 };
 
 export const refreshToken = async (req: Request, res: Response): Promise<void> => {
@@ -36,11 +41,13 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
         return;
     }
 
-    const newToken = await refreshAccessToken(refreshToken);
-    if (!newToken) {
+    const tokenData = await refreshAccessToken(refreshToken);
+    if (!tokenData) {
         res.status(403).json({ message: "Invalid refresh token" });
         return;
     }
 
-    res.json({ token: newToken });
+    // Set the new refresh token in the cookie
+    res.cookie("refreshToken", tokenData.newRefreshToken, { httpOnly: true, secure: true, sameSite: "strict" });
+    res.json({ accessToken: tokenData.accessToken });
 };
