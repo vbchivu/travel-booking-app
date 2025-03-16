@@ -13,6 +13,8 @@ services:
         condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped # Keeps the container running
+    tty: true # Allows interactive shell access
 
   # 🚀 USER SERVICE
   user-service:

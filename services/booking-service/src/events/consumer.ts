@@ -1,3 +1,4 @@
+// src/events/consumer.ts
 import amqp, { Channel } from "amqplib";
 import { config } from "../config/env"; // ✅ Centralized configuration
 import { logger } from "../utils/logger";

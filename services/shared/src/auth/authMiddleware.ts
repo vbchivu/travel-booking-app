@@ -1,21 +1,31 @@
-// src/auth/authMiddleware.ts
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import { config } from "../config/env";
+import { verifyToken } from "./tokenService";
 
+declare module "express" {
+    interface Request {
+        user?: { id: string; role: string };
+    }
+}
+
+/**
+ * Middleware to authenticate JWT tokens.
+ * Ensures valid access token before proceeding.
+ */
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction): void => {
-    const token = req.header('Authorization')?.split(' ')[1];
+    const token = req.header("Authorization")?.split(" ")[1];
 
     if (!token) {
-        res.status(401).json({ message: 'Unauthorized' });
-        return; // Ensure function exits after sending response
+        res.status(401).json({ message: "Unauthorized: No token provided" });
+        return;
     }
 
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-        (req as any).user = decoded; // Attach user info to request
-        next();
-    } catch (error) {
-        res.status(403).json({ message: 'Invalid token' });
-        return; // Explicitly return `void` here
+    const decoded = verifyToken(token, config.jwtSecret);
+    if (!decoded) {
+        res.status(403).json({ message: "Invalid or expired token" });
+        return;
     }
+
+    req.user = decoded as { id: string; role: string }; // Attach user info to request
+    next();
 };

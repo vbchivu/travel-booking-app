@@ -1,3 +1,4 @@
+// src/events/publisher.ts
 import amqp, { Channel } from "amqplib";
 import { logger } from "../utils/logger";
 import { config } from "../config/env";

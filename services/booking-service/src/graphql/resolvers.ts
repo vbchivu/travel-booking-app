@@ -1,3 +1,4 @@
+// src/graphql/resolvers.ts
 import { createBooking, getBookingById, getBookingsByUser, updateBookingStatus } from "../models/bookingModel";
 import { publishBookingEvent } from "../events/publisher";
 

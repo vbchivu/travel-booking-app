@@ -26,7 +26,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     res.cookie("refreshToken", authData.refreshToken, { httpOnly: true, secure: true, sameSite: "strict" });
-    res.json({ token: authData.token, userId: authData.userId });
+    res.json({ token: authData.accessToken, userId: authData.userId });
 };
 
 export const refreshToken = async (req: Request, res: Response): Promise<void> => {

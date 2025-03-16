@@ -49,6 +49,7 @@
   
   EXPOSE 5000
   
+  ENV JWT_SECRET=${JWT_SECRET}
   # Start the server from user-service's compiled output
   CMD ["node", "/app/services/user-service/dist/server.js"]
   
