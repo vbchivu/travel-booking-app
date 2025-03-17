@@ -24,8 +24,6 @@ export const generateTokens = (user: UserPayload) => {
  * Verifies a token and returns its payload if valid.
  */
 export const verifyToken = (token: string, secret: string) => {
-    console.log("Verifying token:", token);
-    console.log("Using secret:", secret);
     try {
         return jwt.verify(token, secret) as UserPayload;
     } catch (error) {

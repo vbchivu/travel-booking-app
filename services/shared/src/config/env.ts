@@ -1,3 +1,4 @@
+import { log } from "console";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -12,6 +13,5 @@ export const config = {
     jwtExpiration: process.env.JWT_EXPIRATION || "15m",
     refreshExpiration: process.env.REFRESH_EXPIRATION || "7d",
     databaseUrl: process.env.DATABASE_URL as string,
+    logLevel: process.env.LOG_LEVEL || "info",
 };
-
-console.log("[Shared] Loaded config:", config);

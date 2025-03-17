@@ -1,57 +1,110 @@
-// src/events/consumer.ts
-import amqp, { Channel } from "amqplib";
-import { config } from "../config/env"; // ✅ Centralized configuration
-import { logger } from "../utils/logger";
+// services/booking-service/src/events/consumer.ts
+import * as amqp from "amqplib";
+import { Channel } from "amqplib";
+import { config } from "../config/env";
+import { logger } from "@travel-app/shared";
 
 let channel: Channel | null = null;
+let connection: amqp.ChannelModel;
 
-async function startConsumer() {
-    try {
-        if (!config.rabbitmqUrl) {
-            logger.error("❌ RABBITMQ_URL is required but missing.");
-            process.exit(1);
-        }
+/**
+ * Connects to RabbitMQ and sets up the consumer.
+ * Includes retries with a fixed delay and logs progress.
+ */
+async function startConsumer(retries = 5, delay = 5000): Promise<void> {
+    while (retries > 0) {
+        try {
+            logger.info("🚀 Connecting to RabbitMQ...");
 
-        let connection = await amqp.connect(config.rabbitmqUrl);
-        channel = await connection.createChannel();
-        await channel.assertExchange(config.exchangeName, "topic", { durable: true });
+            // Attempt to connect
+            connection = await amqp.connect(config.rabbitmqUrl);
+            if (!connection) {
+                throw new Error("RabbitMQ connection failed");
+            }
 
-        await channel.assertQueue(config.queueName, { durable: true });
-        await channel.bindQueue(config.queueName, config.exchangeName, "booking.created");
+            // Create the channel
+            channel = await connection.createChannel();
+            if (!channel) {
+                throw new Error("Failed to create RabbitMQ channel");
+            }
 
-        logger.info(`📥 Listening for messages in queue: ${config.queueName}`);
+            // Ensure the exchange and queue exist
+            await channel.assertExchange(config.exchangeName, "topic", { durable: true });
+            await channel.assertQueue(config.queueName, { durable: true });
+            await channel.bindQueue(config.queueName, config.exchangeName, "booking.created");
 
-        channel.consume(
-            config.queueName,
-            async (msg) => {
-                if (msg) {
-                    const content = msg.content.toString();
-                    logger.info(`✅ Received event: booking.created`, { eventData: content });
+            logger.info(`📥 Listening for messages in queue: ${config.queueName}`);
 
-                    // Simulate processing (replace with actual logic)
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
+            // Optionally limit the number of unacknowledged messages. 
+            // This is often considered a best practice to avoid overwhelming consumers.
+            // channel.prefetch(1);
 
-                    if (channel) {
-                        channel.ack(msg); // Acknowledge message processing
+            // Consume messages
+            channel.consume(
+                config.queueName,
+                async (msg) => {
+                    if (msg) {
+                        try {
+                            const content = msg.content.toString();
+                            logger.info(`✅ Received event: booking.created`, { eventData: content });
+
+                            // Simulate asynchronous processing (replace with actual logic)
+                            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                            // Acknowledge message
+                            if (channel) {
+                                channel.ack(msg);
+                            } else {
+                                logger.error("❌ Channel is null, cannot acknowledge message");
+                            }
+                        } catch (error) {
+                            logger.error("❌ Error processing event", { error });
+                        }
                     }
-                }
-            },
-            { noAck: false } // Ensures messages are not lost if consumer crashes
-        );
+                },
+                { noAck: false }
+            );
 
-        // Graceful shutdown
-        process.on("SIGINT", async () => {
-            logger.info("🚦 Shutting down RabbitMQ consumer...");
-            await channel?.close();
-            await connection?.close();
-            process.exit(0);
-        });
+            // If successful, break out of the retry loop
+            return;
+        } catch (error) {
+            logger.error(`❌ RabbitMQ Consumer Error. Retries left: ${retries}`, { error });
+            retries -= 1;
+            await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+    }
 
+    logger.error("❌ RabbitMQ Consumer Connection Failed. No retries left.");
+    process.exit(1);
+}
+
+/**
+ * Graceful shutdown: closes channel & connection.
+ */
+async function shutdown() {
+    logger.info("🚦 Shutting down RabbitMQ consumer...");
+    try {
+        if (channel) {
+            await channel.close();
+            logger.info("✅ Consumer channel closed");
+        }
+        if (connection) {
+            await connection.close();
+            logger.info("✅ Consumer connection closed");
+        }
     } catch (error) {
-        logger.error("❌ RabbitMQ Consumer Error:", { error });
-        setTimeout(startConsumer, 5000); // Retry after 5 seconds
+        logger.error("❌ Error during consumer shutdown", { error });
+    } finally {
+        process.exit(0);
     }
 }
 
-// Start RabbitMQ Consumer on startup
-startConsumer();
+// Handle common termination signals
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
+// Start consumer on startup
+startConsumer().catch((err) => {
+    logger.error("❌ Uncaught error in startConsumer", { err });
+    process.exit(1);
+});

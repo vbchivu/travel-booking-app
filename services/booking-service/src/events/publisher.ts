@@ -1,51 +1,56 @@
-// src/events/publisher.ts
-import amqp, { Channel } from "amqplib";
-import { logger } from "../utils/logger";
+// services/booking-service/src/events/publisher.ts
+import * as amqp from "amqplib";
+import { Channel } from "amqplib";
+import { logger } from "@travel-app/shared";
 import { config } from "../config/env";
 
 let channel: Channel | null = null;
-let initializing = false;
+let connection: amqp.ChannelModel;
 
-async function initializeRabbitMQ() {
-    if (initializing) return;
-    initializing = true;
+/**
+ * Establishes connection to RabbitMQ and initializes the publisher.
+ * Includes retries with a fixed delay and logs progress.
+ */
+async function initializeRabbitMQ(retries = 5, delay = 5000): Promise<void> {
+    while (retries > 0) {
+        try {
+            logger.info("🚀 Connecting to RabbitMQ for publishing...");
 
-    try {
-        if (!config.rabbitmqUrl) {
-            logger.error("RABBITMQ_URL is required but missing");
-            process.exit(1);
+            connection = await amqp.connect(config.rabbitmqUrl);
+            if (!connection) {
+                throw new Error("RabbitMQ connection failed");
+            }
+
+            channel = await connection.createChannel();
+            if (!channel) {
+                throw new Error("Failed to create RabbitMQ channel");
+            }
+
+            // Ensure exchange exists
+            await channel.assertExchange(config.exchangeName, "topic", { durable: true });
+
+            logger.info("✅ RabbitMQ Publisher initialized");
+            return;
+        } catch (error) {
+            logger.error(`❌ RabbitMQ Connection Failed. Retries left: ${retries}`, { error });
+            retries -= 1;
+            await new Promise((resolve) => setTimeout(resolve, delay));
         }
-
-        let connection = await amqp.connect(config.rabbitmqUrl);
-
-        connection.on("close", async () => {
-            logger.warn("RabbitMQ connection closed. Reconnecting...");
-            channel = null;
-            await initializeRabbitMQ();
-        });
-
-        channel = await connection.createChannel();
-        await channel.assertExchange(config.exchangeName, "topic", { durable: true });
-        logger.info("✅ RabbitMQ Publisher initialized");
-
-        // Graceful shutdown
-        process.on("SIGINT", async () => {
-            logger.info("🚦 Closing RabbitMQ Publisher...");
-            await channel?.close();
-            await connection?.close();
-            process.exit(0);
-        });
-    } catch (error) {
-        logger.error("❌ RabbitMQ Publisher Initialization Error:", { error });
-        setTimeout(initializeRabbitMQ, 5000); // Retry connection after 5 sec
-    } finally {
-        initializing = false;
     }
+
+    logger.error("❌ RabbitMQ Publisher Connection Failed. No retries left.");
+    process.exit(1);
 }
 
-export async function publishBookingEvent(eventType: string, data: object) {
+/**
+ * Publishes an event to RabbitMQ.
+ * @param eventType The event type (e.g., "booking.created")
+ * @param data The event payload
+ */
+export async function publishBookingEvent(eventType: string, data: object): Promise<void> {
+    // If channel isn't ready, re-initialize
     if (!channel) {
-        logger.warn("⚠️ Channel not initialized. Attempting to initialize...");
+        logger.warn("⚠️ Publisher channel not initialized. Attempting to reconnect...");
         await initializeRabbitMQ();
         if (!channel) {
             logger.error("❌ Failed to initialize channel");
@@ -54,12 +59,42 @@ export async function publishBookingEvent(eventType: string, data: object) {
     }
 
     try {
-        channel.publish(config.exchangeName, eventType, Buffer.from(JSON.stringify(data)), { persistent: true });
+        channel.publish(config.exchangeName, eventType, Buffer.from(JSON.stringify(data)), {
+            persistent: true,
+        });
         logger.info(`📢 Event published: ${eventType}`, { eventData: data });
     } catch (error) {
         logger.error(`❌ Failed to publish event: ${eventType}`, { error });
     }
 }
 
+/**
+ * Graceful shutdown handling: closes channel & connection.
+ */
+async function shutdown() {
+    logger.info("🚦 Shutting down RabbitMQ publisher...");
+    try {
+        if (channel) {
+            await channel.close();
+            logger.info("✅ Publisher channel closed");
+        }
+        if (connection) {
+            await connection.close();
+            logger.info("✅ Publisher connection closed");
+        }
+    } catch (error) {
+        logger.error("❌ Error during publisher shutdown", { error });
+    } finally {
+        process.exit(0);
+    }
+}
+
+// Handle common termination signals
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
 // Initialize RabbitMQ connection on startup
-initializeRabbitMQ();
+initializeRabbitMQ().catch((err) => {
+    logger.error("❌ Uncaught error in initializeRabbitMQ", { err });
+    process.exit(1);
+});

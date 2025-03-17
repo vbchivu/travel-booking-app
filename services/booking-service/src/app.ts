@@ -6,7 +6,7 @@ import { ApolloServer } from "apollo-server-express";
 import bookingRoutes from "./routes/bookingRoutes";
 import { typeDefs } from "./graphql/schema";
 import { resolvers } from "./graphql/resolvers";
-import { logger } from "./utils/logger";
+import { logger } from "@travel-app/shared";
 
 const app: Express = express();
 app.use(express.json());

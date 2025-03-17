@@ -16,7 +16,6 @@ afterAll(async () => {
 
 describe("Authentication API", () => {
     const testUser = { email: "test@example.com", password: "SecurePass123" };
-    let refreshToken: string;
     let requestAgent: any;
 
     beforeAll(() => {
@@ -39,8 +38,6 @@ describe("Authentication API", () => {
 
         expect(res.body).toHaveProperty("accessToken");
         expect(res.body).toHaveProperty("userId");
-
-        refreshToken = res.body.refreshToken;
     });
 
     it("should deny access with an invalid token", async () => {
