@@ -1,0 +1,32 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "logs-dashboard",
+    "title": "Application Logs",
+    "schemaVersion": 16,
+    "version": 1,
+    "panels": [
+      {
+        "title": "Live Logs",
+        "type": "logs",
+        "targets": [
+          {
+            "datasource": "Loki",
+            "expr": "{job=\"docker-logs\"}"
+          }
+        ]
+      },
+      {
+        "title": "Error Logs",
+        "type": "logs",
+        "targets": [
+          {
+            "datasource": "Loki",
+            "expr": "{job=\"docker-logs\"} |= \"error\""
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}

@@ -1,0 +1,11 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "home-dashboard",
+    "title": "Home",
+    "schemaVersion": 16,
+    "version": 1,
+    "panels": []
+  },
+  "overwrite": true
+}

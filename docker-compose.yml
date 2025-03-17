@@ -143,9 +143,11 @@ services:
       - "3000:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
-      - ./grafana.ini:/etc/grafana/grafana.ini # ✅ Added config
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
     networks:
-      - backend
+    - backend
     depends_on:
       - loki
       - prometheus
