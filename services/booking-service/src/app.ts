@@ -1,5 +1,5 @@
 // src/app.ts
-import express, { Express } from "express";
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ApolloServer } from "apollo-server-express";
@@ -10,7 +10,7 @@ import { logger } from "@travel-app/shared";
 import { trackMetrics } from "@travel-app/shared";
 import metricsRouter from "./routes/metricsRouter";
 
-const app: Express = express();
+const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
@@ -19,20 +19,6 @@ app.use(trackMetrics);
 app.use(metricsRouter);
 // REST API Routes
 app.use("/bookings", bookingRoutes);
-
-// Middleware to log requests
-app.use((req, _res, next) => {
-    logger.info(`Incoming Request: ${req.method} ${req.url}`, { ip: req.ip });
-    next();
-});
-
-// Middleware to log responses
-app.use((req, res, next) => {
-    res.on("finish", () => {
-        logger.info(`Response Sent: ${req.method} ${req.url} - ${res.statusCode}`);
-    });
-    next();
-});
 
 // Initialize GraphQL
 let server: ApolloServer;

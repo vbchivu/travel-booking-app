@@ -17,13 +17,13 @@ app.use(metricsRouter);
 app.use("/api/auth", authRoutes);
 
 // Middleware to log requests
-app.use((req, _res, next) => {
+app.use((req: { method: any; url: any; ip: any; }, _res: any, next: () => void) => {
     logger.info(`Incoming Request: ${req.method} ${req.url}`, { ip: req.ip });
     next();
 });
 
 // Middleware to log responses
-app.use((req, res, next) => {
+app.use((req: { method: any; url: any; }, res: { on: (arg0: string, arg1: () => void) => void; statusCode: any; }, next: () => void) => {
     res.on("finish", () => {
         logger.info(`Response Sent: ${req.method} ${req.url} - ${res.statusCode}`);
     });
