@@ -1,5 +1,3 @@
-# Travel Booking and Support System
-
 # 🌍 Travel Booking & Support System
 
 ## 🚀 Overview
@@ -87,5 +85,6 @@ cd ../frontend && npm run dev
 ✔️ **Implemented REST API and GraphQL resolvers for booking management**  
 ✔️ **Integrated RabbitMQ event publishing for booking.created**  
 ✔️ **Implemented structured logging with Winston**  
-✔️ **Exposed routes for creating and retrieving bookings**  
+✔️ **Exposed routes for creating and retrieving bookings**
+
 ---
